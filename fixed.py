@@ -1,6 +1,10 @@
 import rebound
 import numpy as np
 import h5py
+import os
+import sys
+from multiprocess import Pool
+
 
 def hdf5_to_rebound(row):
      row = row.reshape((-1,5))
@@ -26,19 +30,40 @@ def isStable(sim):
     simc.integrator = "whfast"
     Pmin = min([p.P for p in simc.particles[1:]])
     simc.dt = Pmin * 0.023456789
-    for k in range(1000):
+    tmax = 1e7
+    for k in range(int(tmax/1e4)):
         simc.integrate(simc.t+1e4 * Pmin, exact_finish_time=0)
         for i in range(1, simc.N):
             a0 = sim.particles[i].a
             a1 = simc.particles[i].a
             if np.abs((a0-a1)/a0) > 0.1:
-                return False
-    return True
+                return simc.t/Pmin
+    return 0.0 # stable
+    
+def run(params):
+    system, sample = params
+    mcmc_posterior = h5py.File("NBody_MCMC_Posteriors.hdf5", "r")[system]['DefaultPriors']['PosteriorSample']
+    with open("output/"+system+"/%05d.txt"%sample, 'w') as f:
+        sim = hdf5_to_rebound(mcmc_posterior[sample])
+        s = isStable(sim)
+        print(sample, s, file=f)
+        for i in range(1,sim.N):
+            print(sim.particles[i].m, sim.particles[i].a, sim.particles[i].e, file=f)
 
-system = "Kepler-24" 
+
+system = sys.argv[1] 
+try:
+    os.mkdir("output")
+except:
+    pass
+try:    
+    os.mkdir("output/"+system)
+except:
+    pass
+
 mcmc_posterior = h5py.File("NBody_MCMC_Posteriors.hdf5", "r")[system]['DefaultPriors']['PosteriorSample']
+params = [ [system, sample] for sample in np.random.choice(len(mcmc_posterior), replace=False, size=500)]
 
-for sample in np.random.choice(len(mcmc_posterior), replace=False, size=50):
-    sim = hdf5_to_rebound(mcmc_posterior[sample])
-    print("s" if isStable(sim) else "U", end="", flush=True)
+with Pool() as pool:
+    results = pool.map(run,params)
 
