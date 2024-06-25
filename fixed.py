@@ -51,7 +51,8 @@ def run(params):
             print(sim.particles[i].m, sim.particles[i].a, sim.particles[i].e, file=f)
 
 
-system = sys.argv[1] 
+keys = [k for k in h5py.File("NBody_MCMC_Posteriors.hdf5", "r")]
+system = keys[int(sys.argv[1])]
 try:
     os.mkdir("output")
 except:
@@ -64,6 +65,6 @@ except:
 mcmc_posterior = h5py.File("NBody_MCMC_Posteriors.hdf5", "r")[system]['DefaultPriors']['PosteriorSample']
 params = [ [system, sample] for sample in np.random.choice(len(mcmc_posterior), replace=False, size=500)]
 
-with Pool() as pool:
+with Pool(80) as pool:
     results = pool.map(run,params)
 
