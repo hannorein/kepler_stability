@@ -26,12 +26,13 @@ def isStable(sim):
     simc.integrator = "whfast"
     Pmin = min([p.P for p in simc.particles[1:]])
     simc.dt = Pmin * 0.023456789
-    simc.integrate(1e4 * Pmin, exact_finish_time=0)
-    for i in range(1, simc.N):
-        a0 = sim.particles[i].a
-        a1 = simc.particles[i].a
-        if np.abs((a0-a1)/a0) > 0.1:
-            return False
+    for k in range(1000):
+        simc.integrate(simc.t+1e4 * Pmin, exact_finish_time=0)
+        for i in range(1, simc.N):
+            a0 = sim.particles[i].a
+            a1 = simc.particles[i].a
+            if np.abs((a0-a1)/a0) > 0.1:
+                return False
     return True
 
 system = "Kepler-24" 
