@@ -27,7 +27,7 @@ def hdf5_to_rebound(row):
 
 def isStable(sim):
     simc = sim.copy() # keep initial simulation
-    simc.integrator = "whfast"
+    simc.integrator = "whfast512"
     Pmin = min([p.P for p in simc.particles[1:]])
     simc.dt = Pmin * 0.023456789
     tmax = 1e7
@@ -45,7 +45,7 @@ def run(params):
     mcmc_posterior = h5py.File("NBody_MCMC_Posteriors.hdf5", "r")[system]['DefaultPriors']['PosteriorSample']
     sim = hdf5_to_rebound(mcmc_posterior[sample])
     s = isStable(sim)
-    with open("output/"+system+"/%05d.txt"%sample, 'w') as f:
+    with open("output512/"+system+"/%05d.txt"%sample, 'w') as f:
         print(sample, s, file=f)
         for i in range(1,sim.N):
             print(sim.particles[i].m, sim.particles[i].a, sim.particles[i].e, file=f)
@@ -54,11 +54,11 @@ def run(params):
 keys = [k for k in h5py.File("NBody_MCMC_Posteriors.hdf5", "r")]
 system = keys[int(sys.argv[1])]
 try:
-    os.mkdir("output")
+    os.mkdir("output512")
 except:
     pass
 try:    
-    os.mkdir("output/"+system)
+    os.mkdir("output512/"+system)
 except:
     pass
 
