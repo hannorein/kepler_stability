@@ -30,14 +30,14 @@ def isStable(sim, N_systems):
     simc.integrator = "whfast512"
     simc.ri_whfast512.N_systems = N_systems
     simc.dt = 0.023456789
-    tmax = 1e4
+    tmax = 1e7
     times = [0.0 for i in range(N_systems)]
     for k in range(int(tmax/1e4)):
         simc.integrate(simc.t+1e4, exact_finish_time=0)
         for i in range(N_systems):
             for j in range(1, simc.N//N_systems):
-                a0 = sim.particles[i*(N_planets+1)+j].orbit(primary=sim.particles[0]).a
-                a1 = simc.particles[i*(N_planets+1)+j].orbit(primary=simc.particles[0]).a
+                a0 = sim.particles[i*(N_planets+1)+j].orbit(primary=sim.particles[i*(N_planets+1)]).a
+                a1 = simc.particles[i*(N_planets+1)+j].orbit(primary=simc.particles[i*(N_planets+1)]).a
                 if np.abs((a0-a1)/a0) > 0.1:
                     if times[i] == 0.0:
                         times[i] = simc.t
@@ -58,8 +58,8 @@ def run(params):
         with open("output512/"+system+"/%05d.txt"%(sample*N_systems+i), 'w') as f:
             print((sample*N_systems+i), s[i], file=f)
             for j in range(1,N_planets+1):
-                o = simcombined.particles[i*N_planets+j].orbit()
-                print(simcombined.particles[i*N_planets+j].m, o.a, o.e, file=f)
+                o = simcombined.particles[i*(N_planets+1)+j].orbit(primary=simcombined.particles[i*(N_planets+1)])
+                print(simcombined.particles[i*(N_planets+1)+j].m, o.a, o.e, file=f)
 
 
 keys = [k for k in h5py.File("NBody_MCMC_Posteriors.hdf5", "r")]
