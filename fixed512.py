@@ -30,7 +30,7 @@ def isStable(sim, N_systems):
     simc.integrator = "whfast512"
     simc.ri_whfast512.N_systems = N_systems
     simc.dt = 0.023456789
-    tmax = 1e7
+    tmax = 1e8
     times = [0.0 for i in range(N_systems)]
     for k in range(int(tmax/1e4)):
         simc.integrate(simc.t+1e4, exact_finish_time=0)
@@ -41,6 +41,9 @@ def isStable(sim, N_systems):
                 if np.abs((a0-a1)/a0) > 0.1:
                     if times[i] == 0.0:
                         times[i] = simc.t
+                        if min(times) != 0.0:
+                            # all unstable
+                            return times
     return times 
     
 def run(params):
